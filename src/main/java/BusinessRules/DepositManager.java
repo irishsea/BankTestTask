@@ -76,6 +76,11 @@ public class DepositManager implements IDepositManager {
         return deposits;
     }
 
+    /**
+     * Метод возвращает все имеющиеся в базе вклады
+     * @return
+     */
+
     @Override
     public List<Deposit> getAllDeposits() {
         List<Deposit> deposits = new ArrayList<>();
@@ -92,12 +97,16 @@ public class DepositManager implements IDepositManager {
         return deposits;
     }
 
+    /**
+     * Метод возвращает текущую прибыль по вкладу
+     * @param deposit
+     * @param currentDate
+     * @return
+     */
     @Override
     public double getEarnings(Deposit deposit, Date currentDate) {
         int currentDays = (int) TimeUnit.DAYS.convert(currentDate.getTime(), TimeUnit.MILLISECONDS);
-        return deposit.isWithPercentCapitalization() ?
-                deposit.getEarningsWithCap(deposit.getPercent(), currentDays) :
-                deposit.getEarningsWithoutCap(deposit.getPercent(), currentDays);
+        return getEarningsByDate(deposit, deposit.getPercent(), currentDays);
     }
 
 
@@ -120,7 +129,6 @@ public class DepositManager implements IDepositManager {
             while (resultSet.next()) {
                 gotDeposit = convertResultSetToDeposit(resultSet); //проверка, действительно ли сущестует такой вклад в базе
             }
-            double sum = 0;
             if (gotDeposit.getId() == deposit.getId()) {
                 st = conn.prepareStatement(sqlDelete);
                 st.setInt(1, gotDeposit.getId());
@@ -129,9 +137,7 @@ public class DepositManager implements IDepositManager {
                         "Запись была удалена из базы. Количество изменений: " + rowCount);
                 int closeDays = (int) TimeUnit.DAYS.convert(closeDate.getTime(), TimeUnit.MILLISECONDS);
                 double percent = isDepositClosingEarly(deposit, closeDate) ? deposit.getPretermPercent() : deposit.getPercent();
-                return deposit.isWithPercentCapitalization() ?
-                        deposit.getEarningsWithCap(percent, closeDays) :
-                        deposit.getEarningsWithoutCap(percent, closeDays);
+                return getEarningsByDate(deposit, percent, closeDays);
             } else {
                 System.out.println("Поиск по базе не дал результатов");
                 return -1;
@@ -172,6 +178,10 @@ public class DepositManager implements IDepositManager {
         return closeDays - startDays < deposit.getTermDays();
     }
 
-
+    private double getEarningsByDate(Deposit deposit, double percent, int daysAmount) {
+        return deposit.isWithPercentCapitalization() ?
+                deposit.getEarningsWithCap(percent, daysAmount) :
+                deposit.getEarningsWithoutCap(percent, daysAmount);
+    }
 
 }
