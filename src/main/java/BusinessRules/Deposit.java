@@ -1,5 +1,6 @@
 package BusinessRules;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -14,8 +15,11 @@ public class Deposit {
     private boolean withPercentCapitalization;
     private Client client;
     private static final double PERCENTAGE_AMOUNT = 12; //ежегодная капитализация
+    private final int startDays = (int) TimeUnit.DAYS.convert(startDate.getTime(), TimeUnit.MILLISECONDS);
 
-
+    public int getStartDays(){
+        return startDays;
+    }
     public Deposit(int id, double amount, double percent, double pretermPercent, int termDays, Date startDate, boolean withPercentCapitalization, Client client) {
         this.id = id;
         this.amount = amount;
@@ -141,7 +145,7 @@ public class Deposit {
     }
 
     private int getCapitalizationsAmount(int actualTermDays) {
-        int result =  actualTermDays / (int) (365 / PERCENTAGE_AMOUNT);
+        int result = actualTermDays / (int) (365 / PERCENTAGE_AMOUNT);
         return result;
     }
 
@@ -155,11 +159,21 @@ public class Deposit {
         return result;
     }
 
-    private int getActualTermDays(int currentDays){
-        int startDays = (int) TimeUnit.DAYS.convert(startDate.getTime(), TimeUnit.MILLISECONDS);
+    private int getActualTermDays(int currentDays) {
         int result = currentDays - startDays;
         return result;
     }
+
+    public Date getAutoCloseDate() {
+        return new Date(startDate.getTime() + Duration.ofDays(termDays).toMillis());
+    }
+
+    public double getEarningsByDate(double percent, int daysAmount){
+        return this.isWithPercentCapitalization() ?
+                this.getEarningsWithCap(percent, daysAmount) :
+                this.getEarningsWithoutCap(percent, daysAmount);
+    }
+
 
 
 }

@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 public interface IDepositManager {
-    //@param pretermPercent
+
     Deposit addDeposit(Client client, double amount, double percent, double pretermPercent,
                        int termDays, Date startDate, boolean withPercentCapitalization);
 
